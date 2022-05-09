@@ -9,11 +9,11 @@ class UseDatabase
     public function __construct()
     {
         // Create connection
-        $this->$connection = new mysqli(CONF["servername"], CONF["username"], CONF["password"], CONF["dbname"]);
+        $this->connection = new mysqli(CONF["servername"], CONF["username"], CONF["password"], CONF["dbname"]);
         // Convert database ints and floats to php ints and floats
-        $this->$connection->options(MYSQLI_OPT_INT_AND_FLOAT_NATIVE, 1);
-        if ($this->$connection->connect_error) {
-            die('Connection failed: ' . $this->$connection->connect_error);
+        $this->connection->options(MYSQLI_OPT_INT_AND_FLOAT_NATIVE, 1);
+        if ($this->connection->connect_error) {
+            die('Connection failed: ' . $this->connection->connect_error);
         }
     }
 
@@ -25,7 +25,7 @@ class UseDatabase
      */
     public function selectFile($id)
     {
-        $stmt = $this->$connection->prepare('SELECT id, file_name, file_path, version, date, mirrors FROM files WHERE id = ?');
+        $stmt = $this->connection->prepare('SELECT id, file_name, file_path, version, date, mirrors FROM files WHERE id = ?');
         $stmt->bind_param('i', $id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -40,7 +40,7 @@ class UseDatabase
      */
     public function selectSystem($id)
     {
-        $stmt = $this->$connection->prepare('SELECT id, manufacturer, model, data FROM systems WHERE id = ?');
+        $stmt = $this->connection->prepare('SELECT id, manufacturer, model, data FROM systems WHERE id = ?');
         $stmt->bind_param('i', $id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -54,7 +54,7 @@ class UseDatabase
      */
     public function selectSystems()
     {
-        $result = $this->$connection->query('SELECT id, manufacturer, model, data FROM systems');
+        $result = $this->connection->query('SELECT id, manufacturer, model, data FROM systems');
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
@@ -67,7 +67,7 @@ class UseDatabase
      */
     public function selectSystemsByFile($fileID)
     {
-        $stmt = $this->$connection->prepare('SELECT id, manufacturer, model, data FROM systems WHERE JSON_CONTAINS(data->"$.data[*].drivers", ?)');
+        $stmt = $this->connection->prepare('SELECT id, manufacturer, model, data FROM systems WHERE JSON_CONTAINS(data->"$.data[*].drivers", ?)');
         $stmt->bind_param('s', $fileID);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -82,7 +82,7 @@ class UseDatabase
      */
     public function selectDevice($id)
     {
-        $stmt = $this->$connection->prepare('SELECT id, manufacturer, device_name, device_model, category, files FROM devices WHERE id = ?');
+        $stmt = $this->connection->prepare('SELECT id, manufacturer, device_name, device_model, category, files FROM devices WHERE id = ?');
         $stmt->bind_param('i', $id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -98,7 +98,7 @@ class UseDatabase
      */
     public function selectDevicesByFile($fileID)
     {
-        $stmt = $this->$connection->prepare('SELECT id, manufacturer, device_name, device_model, category, files FROM devices WHERE JSON_CONTAINS(files, ?)');
+        $stmt = $this->connection->prepare('SELECT id, manufacturer, device_name, device_model, category, files FROM devices WHERE JSON_CONTAINS(files, ?)');
         $stmt->bind_param('s', $fileID);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -113,7 +113,7 @@ class UseDatabase
      */
     public function selectMirror($id)
     {
-        $stmt = $this->$connection->prepare('SELECT id, name, region, address, base_url, https FROM mirrors WHERE id = ?');
+        $stmt = $this->connection->prepare('SELECT id, name, region, address, base_url, https FROM mirrors WHERE id = ?');
         $stmt->bind_param('i', $id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -127,7 +127,7 @@ class UseDatabase
      */
     public function selectStats()
     {
-        $result = $this->$connection->query('SELECT name, count FROM stats');
+        $result = $this->connection->query('SELECT name, count FROM stats');
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
@@ -139,7 +139,7 @@ class UseDatabase
      */
     public function searchSystems($model)
     {
-        $stmt = $this->$connection->prepare('SELECT id, manufacturer, model FROM systems WHERE model LIKE ?');
+        $stmt = $this->connection->prepare('SELECT id, manufacturer, model FROM systems WHERE model LIKE ?');
         $stmt->bind_param('s', $model);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -154,7 +154,7 @@ class UseDatabase
      */
     public function searchDevices($manufacturerOrName)
     {
-        $stmt = $this->$connection->prepare('SELECT id, manufacturer, device_name FROM devices WHERE device_name LIKE ? OR manufacturer LIKE ?');
+        $stmt = $this->connection->prepare('SELECT id, manufacturer, device_name FROM devices WHERE device_name LIKE ? OR manufacturer LIKE ?');
         $stmt->bind_param('ss', $manufacturerOrName, $manufacturerOrName);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -169,7 +169,7 @@ class UseDatabase
      */
     public function searchFiles($fileName)
     {
-        $stmt = $this->$connection->prepare("SELECT id, file_name, file_path, version, date FROM files WHERE file_name LIKE ?");
+        $stmt = $this->connection->prepare("SELECT id, file_name, file_path, version, date FROM files WHERE file_name LIKE ?");
         $stmt->bind_param('s', $fileName);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -178,7 +178,7 @@ class UseDatabase
 
     public function __destruct()
     {
-        $this->$connection->close();
+        $this->connection->close();
     }
 }
 ?>

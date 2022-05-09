@@ -86,64 +86,39 @@ if (isset($_POST['query'])) {
    $cleanquery = str_replace('%', '', $query);
 }
 
-require('creds.php');
+require('use_database.php');
 
-// Create connection
-$conn = new mysqli(CONF["servername"], CONF["username"], CONF["password"], CONF["dbname"]);
-// Check connection
-if ($conn->connect_error) {
-   die('Connection failed: ' . $conn->connect_error);
-}
-
-if ($query === null) {
-   $conn->close();
-
-   return;
-}
-
-$result = false;
+$db = new UseDatabase();
+$results = [];
 $list   = '';
 $querytime = microtime(true);
 switch ($queryScope) {
    case 'system':
    {
-      $stmt = $conn->prepare('SELECT id, manufacturer, model FROM systems WHERE model LIKE ?');
-      $stmt->bind_param('s', $query);
-      $stmt->execute();
-      $result = $stmt->get_result();
+      $results = $db->searchSystems($query);
       break;
    }
    case 'device':
    {
-      $stmt = $conn->prepare('SELECT id, manufacturer, device_name FROM devices WHERE device_name LIKE ? OR manufacturer LIKE ?');
-      $stmt->bind_param('ss', $query, $query);
-      $stmt->execute();
-      $result = $stmt->get_result();
+      $results = $db->searchDevices($query);
       break;
    }
    case 'files':
    {
-      $stmt = $conn->prepare("SELECT id, file_name, file_path, version, date FROM files WHERE file_name LIKE ?");
-      $stmt->bind_param('s', $query);
-      $stmt->execute();
-      $result = $stmt->get_result();
+      $results = $db->searchFiles($query);
    }
 }
+
 $querytime = microtime(true) - $querytime;
-if ($result !== false) {
+if (count($results) > 0) {
 
-   echo $result->num_rows . ' results for "' . $cleanquery . '" in ' . $queryScope . ' (took ' . round($querytime, 5) . 'ms)<hr>';
-
-   if ($result->num_rows > 0) {
-      // output data of each row
-      foreach ($result->fetch_all(MYSQLI_ASSOC) as $row) {
-         echo listName($queryScope, $row);
-         echo '<hr>';
-      }
-   } else {
-      echo 'No Results for ' . $cleanquery;
+   echo count($results) . ' results for "' . $cleanquery . '" in ' . $queryScope . ' (took ' . round($querytime, 5) . 'ms)<hr>';
+   // output data of each row
+   foreach ($results as $result) {
+      echo listName($queryScope, $result);
+      echo '<hr>';
    }
+} else {
+   echo 'No Results for ' . $cleanquery;
 }
-
-$conn->close();
 ?>

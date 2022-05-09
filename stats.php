@@ -18,25 +18,16 @@ declare(strict_types=1);
 <?php
 require('nav.html');
 echo '<hr/>';
-require('creds.php');
+require('use_database.php');
 
-// Create connection
-$conn = new mysqli(CONF["servername"], CONF["username"], CONF["password"], CONF["dbname"]);
-// Check connection
-if ($conn->connect_error) {
-   $diemsg = '<pre><i>Unable to retrieve database statistics!</i></pre><i>Copyright <a href="https://nickandfloppy.com/">nick and floppy ' . date('Y');
-   die($diemsg);
-}
+$db = new UseDatabase();
+$stats = $db->selectStats();
 
-$result = $conn->query('SELECT name, count FROM stats');
-
-if ($result !== false) {
+if (count($stats) > 0) {
 	echo '<table border="1"><tr><th>Item</th><th>Count</th><tr>';
-	while ($row = $result->fetch_assoc()) {
-		echo '<tr><td>' . $row['name'] . '</td><td>' . $row['count'] . '</td></tr>';
+	foreach ($stats as $stat) {
+		echo '<tr><td>' . $stat['name'] . '</td><td>' . $stat['count'] . '</td></tr>';
 	}
 	echo '</table>';
 }
-
-$conn->close();
 ?>

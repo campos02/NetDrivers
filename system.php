@@ -20,40 +20,28 @@ declare(strict_types=1);
 <?php require('nav.html'); ?>
 <hr>
 <?php
-require('creds.php');
-// Create connection
-$conn = new mysqli(CONF["servername"], CONF["username"], CONF["password"], CONF["dbname"]);
-
-// Check connection
-if ($conn->connect_error) {
-   die('Connection failed: ' . $conn->connect_error);
-}
+require('use_database.php');
 
 if (isset($_GET['id'])) {
-   $stmt = $conn->prepare('SELECT id, manufacturer, model, data FROM systems WHERE id = ?');
-   $stmt->bind_param('i', $_GET['id']);
-   $stmt->execute();
-   $result = $stmt->get_result();
+   $db = new UseDatabase();
+   $systems = $db->selectSystem($_GET['id']);
 
-   if ($result->num_rows > 0) {
+   if (count($systems) > 0) {
       // output data of each row
-      foreach ($result->fetch_all(MYSQLI_ASSOC) as $row) {
-         $drv = json_decode($row['data'], true, 512, JSON_THROW_ON_ERROR);
-         echo '<h2 class="title"><i>' . $row['manufacturer'] . ' ' . $row['model'] . '</i></h2><hr>';
+      foreach ($systems as $system) {
+         $driver = json_decode($system['data'], true, 512, JSON_THROW_ON_ERROR);
+         echo '<h2 class="title"><i>' . $system['manufacturer'] . ' ' . $system['model'] . '</i></h2><hr>';
          echo '<a href="/link.php?type=system&id=' . urlencode($_GET['id']) . '">Linkback</a><br><br>';
          echo '<table border="1">';
-         foreach ($drv['data'] as $item) {
+         foreach ($driver['data'] as $item) {
             echo '<tr><th colspan="4"><b>' . $item['os'] . ':</b></th></tr>';
             if (count($item['drivers']) > 0) {
                // Commented out as it doesn't get used anywhere
                //$drstr = '';
                foreach ($item['drivers'] as $driver) {
-                  $deviceStmt = $conn->prepare('SELECT manufacturer, device_name FROM devices WHERE JSON_CONTAINS(files, ?)');
-                  $deviceStmt->bind_param('s', $driver);
-                  $deviceStmt->execute();
-                  $deviceResult = $deviceStmt->get_result();
-                  foreach ($deviceResult->fetch_all(MYSQLI_ASSOC) as $deviceRow) {
-                     echo '<tr><td class="drvdetails">' . $deviceRow['manufacturer'] . '</td><td class="drvdetails">' . $deviceRow['device_name']
+                  $devices = $db->selectDevicesByFile($driver);
+                  foreach ($devices as $device) {
+                     echo '<tr><td class="drvdetails">' . $device['manufacturer'] . '</td><td class="drvdetails">' . $device['device_name']
                         . '</td><td class="drvdetails"><a href="/drivers.php?id=' . $driver . '">More Details</a></td><td class="drvdetails">'
                         . '<a href="/download.php?id=' . $driver .'">Download</a></td></tr>';
                   }
@@ -66,7 +54,6 @@ if (isset($_GET['id'])) {
    } else {
       echo 'Invalid System ID';
    }
-   $conn->close();
 } else {
    echo '<b>Error:</b> No System ID Specified!';
 }
